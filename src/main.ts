@@ -18,10 +18,9 @@ backBtn.addEventListener("click", () => {
 window.addEventListener("popstate", router);
 
 function createCard(note: Note): HTMLDivElement {
-    // create a note
     const card = document.createElement("div");
     card.className =
-        "rounded-lg border border-gray-200 bg-white p-4 transition hover:shadow-sm";
+        "cursor-pointer rounded-lg border border-gray-200 bg-white p-4 transition hover:shadow-sm";
 
     const title = document.createElement("h3");
     title.className = "text-sm font-medium text-gray-900 truncate";
@@ -34,8 +33,14 @@ function createCard(note: Note): HTMLDivElement {
     card.appendChild(title);
     card.appendChild(timestamp);
 
+    card.addEventListener("click", () => {
+        history.pushState({}, "", `/note/${note.id}`);
+        router();
+    });
+
     return card;
 }
+
 
 function formInput(
     name: string,
@@ -202,19 +207,61 @@ function createNote() {
     });
 }
 
+function renderNoteDetail(noteId: string) {
+    createBtn.remove();
+    header.appendChild(backBtn);
+    root.innerHTML = "";
+
+    const notes = getNotes();
+    const note = notes?.find((n) => String(n.id) === noteId);
+
+    if (!note) {
+        message.innerText = "Note not found";
+        return;
+    }
+
+    message.innerText = note.title;
+
+    const container = document.createElement("div");
+    container.className =
+        "max-w-md mx-auto px-4 py-6 space-y-4";
+
+    const desc = document.createElement("p");
+    desc.className = "text-sm text-gray-700 whitespace-pre-wrap";
+    desc.innerText = note.description;
+
+    const time = document.createElement("p");
+    time.className = "text-xs text-gray-500";
+    time.innerText = `Created at: ${note.createdAt}`;
+
+    container.appendChild(desc);
+    container.appendChild(time);
+
+    root.appendChild(container);
+}
+
+
 function router() {
     const path = window.location.pathname;
 
-    switch (path) {
-        case "/":
-            renderNotes();
-            break;
-        case "/create":
-            createNote();
-            break;
-        default:
-            renderNotes();
+    if (path === "/") {
+        renderNotes();
+        return;
     }
+
+    if (path === "/create") {
+        createNote();
+        return;
+    }
+
+    if (path.startsWith("/note/")) {
+        const id = path.split("/note/")[1];
+        renderNoteDetail(id);
+        return;
+    }
+
+    renderNotes();
 }
+
 
 router();

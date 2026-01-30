@@ -1,5 +1,20 @@
 import type { NewNote, Note } from "../types";
 
+const ID_KEY = "note_id_counter";
+
+function getNextId(): number {
+    const current = localStorage.getItem(ID_KEY);
+
+    if (!current) {
+        localStorage.setItem(ID_KEY, "1");
+        return 1;
+    }
+
+    const nextId = Number(current) + 1;
+    localStorage.setItem(ID_KEY, String(nextId));
+    return nextId;
+}
+
 export function getNotes(): Note[] {
     const jsonString = localStorage.getItem("notes")
     if (!jsonString) return []
@@ -12,18 +27,15 @@ export function getNotes(): Note[] {
 }
 
 export function addNote(note: NewNote) {
-    if (!note.title) {
-        throw new Error("Title is required")
-    }
-    if (!note.description) {
-        throw new Error("Description is required")
-    }
-    const newNote: Note = {
-        ...note,
-        createdAt: new Date().toDateString()
-    }
+    const notes = getNotes() ?? [];
 
-    const notes = getNotes()
-    notes.push(newNote)
-    localStorage.setItem("notes", JSON.stringify(notes))
+    const newNote: Note = {
+        id: getNextId(),
+        title: note.title,
+        description: note.description,
+        createdAt: new Date().toLocaleString(),
+    };
+
+    notes.push(newNote);
+    localStorage.setItem("notes", JSON.stringify(notes));
 }
